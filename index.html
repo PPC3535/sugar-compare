@@ -116,8 +116,7 @@ footer a{color:var(--accent)}
 
   <div class="upd" id="upd">
     <span class="st"><i class="dot" id="updDot"></i><span id="updText">กำลังตรวจข้อมูล…</span></span>
-    <a class="btn primary" id="updBtn" href="https://github.com/PPC3535/sugar-compare/actions/workflows/update-data.yml" target="_blank" rel="noopener">⟳ อัปเดตข้อมูล</a>
-    <button class="btn" id="checkBtn" type="button">โหลดข้อมูลล่าสุด</button>
+    <button class="btn primary" id="checkBtn" type="button">⟳ โหลดข้อมูลล่าสุด</button>
   </div>
   <div class="panel lede" id="lede"></div>
   <div class="cards" id="cards"></div>
@@ -163,7 +162,7 @@ footer a{color:var(--accent)}
   </section>
 
   <footer>
-    ข้อมูล: ราคาปิด (settlement) รายวันจาก <a href="https://www.barchart.com/futures/quotes/SWH27/price-history/historical">Barchart</a> · ข้อมูลถึง <span id="asof"></span> (อัปเดตอัตโนมัติทุกคืนวันทำการ ราว 03:15 น. เวลาไทย) ·
+    ข้อมูล: ราคาปิด (settlement) รายวันจาก <a href="https://www.barchart.com/futures/quotes/SWH27/price-history/historical">Barchart</a> · ข้อมูลถึง <span id="asof"></span> (อัปเดตโดย Claude ผ่าน Chrome) ·
     “วันเดียวกัน” = เลื่อนปีให้ตรงกับสัญญาปี 2027 (ปี 26 +1 ปี, 25 +2 ปี, 24 +3 ปี) ถ้าวันนั้นไม่มีการซื้อขายใช้วันทำการก่อนหน้า
   </footer>
 </div>
@@ -571,7 +570,6 @@ function startPolling() {
     } else setStatus('wait', `รอข้อมูลใหม่… ${mins} นาที (ปกติใช้ 2–4 นาทีหลังกด Run workflow)`);
   }, 20000);
 }
-document.getElementById('updBtn').addEventListener('click', startPolling);
 document.getElementById('checkBtn').addEventListener('click', () => checkRemote(true));
 
 function render() {
