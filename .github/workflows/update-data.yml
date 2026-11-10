@@ -2,9 +2,6 @@ name: Update sugar data
 
 on:
   workflow_dispatch: {}
-  schedule:
-    # 20:15 UTC Mon–Fri = 03:15 Bangkok, after ICE London and ICE US settle
-    - cron: "15 20 * * 1-5"
 
 permissions:
   contents: write
