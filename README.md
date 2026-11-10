@@ -10,7 +10,9 @@
 
 ## อัปเดตข้อมูล
 
-- อัตโนมัติ: GitHub Actions (`.github/workflows/update-data.yml`) รัน `scripts/update_data.py` ทุกคืนวันทำการ 20:15 UTC (03:15 น. เวลาไทย)
-- กดเอง: ปุ่ม “อัปเดตข้อมูล” บนหน้าเว็บจะเปิดหน้า workflow → กด **Run workflow** → หน้าเว็บจะโหลดข้อมูลใหม่ให้เองเมื่อเสร็จ (ราว 2–4 นาที)
-- หน้าเว็บโหลด `data/data.json` ตอนเปิด ถ้าโหลดไม่ได้จะใช้ข้อมูลที่ฝังไว้ใน `index.html`
-- สัญญาที่ดึงไม่สำเร็จจะคงข้อมูลเดิมไว้ ไม่ลบทิ้ง
+Barchart บล็อกการดึงจากเซิร์ฟเวอร์ (GitHub, Google) จึงให้ Claude ดึงผ่าน Chrome บนเครื่องผู้ใช้
+
+- งานตั้งเวลาใน Claude ชื่อ “Sugar Compare: อัปเดตราคา” รันราว 05:43 น. (เวลาไทย) วันอังคาร–เสาร์ หรือกด **Run now** ที่ claude.ai/code/routines (ปุ่ม “อัปเดตข้อมูล” บนเว็บพาไปหน้านี้)
+- ขั้นตอน: `scripts/merge_update.py active` → รัน `scripts/chrome_fetch.js` ในแท็บ barchart.com → `scripts/merge_update.py merge` → push ไฟล์ `data/` ไปที่ branch `claude/data`
+- หน้าเว็บโหลด `data/data.json` จาก branch `claude/data` (ผ่าน raw.githubusercontent.com) ก่อน แล้วค่อยใช้สำเนาใน `main` เป็นสำรอง
+- Mac ต้องเปิดอยู่และ Chrome มีส่วนขยาย Claude เชื่อมต่ออยู่ตอนงานรัน

@@ -116,7 +116,8 @@ footer a{color:var(--accent)}
 
   <div class="upd" id="upd">
     <span class="st"><i class="dot" id="updDot"></i><span id="updText">กำลังตรวจข้อมูล…</span></span>
-    <button class="btn primary" id="checkBtn" type="button">⟳ โหลดข้อมูลล่าสุด</button>
+    <a class="btn primary" id="updBtn" href="https://claude.ai/code/routines" target="_blank" rel="noopener" title="เปิดหน้างาน แล้วกด Run now ที่ “Sugar Compare: อัปเดตราคา”">⟳ อัปเดตข้อมูล</a>
+    <button class="btn" id="checkBtn" type="button">โหลดข้อมูลล่าสุด</button>
   </div>
   <div class="panel lede" id="lede"></div>
   <div class="cards" id="cards"></div>
@@ -162,7 +163,7 @@ footer a{color:var(--accent)}
   </section>
 
   <footer>
-    ข้อมูล: ราคาปิด (settlement) รายวันจาก <a href="https://www.barchart.com/futures/quotes/SWH27/price-history/historical">Barchart</a> · ข้อมูลถึง <span id="asof"></span> (อัปเดตโดย Claude ผ่าน Chrome) ·
+    ข้อมูล: ราคาปิด (settlement) รายวันจาก <a href="https://www.barchart.com/futures/quotes/SWH27/price-history/historical">Barchart</a> · ข้อมูลถึง <span id="asof"></span> (Claude อัปเดตผ่าน Chrome ราว 05:45 น. วันอังคาร–เสาร์ หรือกด “อัปเดตข้อมูล”) ·
     “วันเดียวกัน” = เลื่อนปีให้ตรงกับสัญญาปี 2027 (ปี 26 +1 ปี, 25 +2 ปี, 24 +3 ปี) ถ้าวันนั้นไม่มีการซื้อขายใช้วันทำการก่อนหน้า
   </footer>
 </div>
@@ -523,12 +524,21 @@ function statusFromInfo() {
   const gen = DATA_INFO.generated ? ' · อัปเดตเมื่อ ' + thGen(new Date(DATA_INFO.generated)) + ' น.' : '';
   setStatus(DATA_INFO.source === 'remote' ? 'ok' : '', 'ข้อมูลถึง ' + fDay(d) + gen + (DATA_INFO.source === 'embedded' ? ' (ข้อมูลที่ฝังในหน้า)' : ''));
 }
+// Fresh prices are pushed by Claude to the claude/data branch; the copy on main is the fallback.
+const DATA_URLS = ['https://raw.githubusercontent.com/PPC3535/sugar-compare/claude/data/data/data.json', 'data/data.json'];
 async function fetchRemote() {
-  const r = await fetch('data/data.json?t=' + Date.now(), {cache: 'no-store'});
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
-  if (!j || !j.symbols || !j.last_date) throw new Error('bad data');
-  return j;
+  let best = null, lastErr = null;
+  for (const u of DATA_URLS) {
+    try {
+      const r = await fetch(u + '?t=' + Date.now(), {cache: 'no-store'});
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      if (!j || !j.symbols || !j.last_date) throw new Error('bad data');
+      if (!best || j.last_date > best.last_date || (j.last_date === best.last_date && (j.generated || '') > (best.generated || ''))) best = j;
+    } catch (e) { lastErr = e; }
+  }
+  if (!best) throw lastErr || new Error('no data');
+  return best;
 }
 async function checkRemote(manual) {
   const btn = document.getElementById('checkBtn');
@@ -553,7 +563,7 @@ let pollTimer = null;
 function startPolling() {
   clearInterval(pollTimer);
   const before = DATA_INFO.generated, t0 = Date.now();
-  setStatus('wait', 'รอ GitHub ดึงข้อมูลใหม่… (กด “Run workflow” ในแท็บที่เปิดขึ้น หน้านี้จะโหลดข้อมูลใหม่ให้เอง)');
+  setStatus('wait', 'ในแท็บที่เปิดขึ้น เลือกงาน “Sugar Compare: อัปเดตราคา” แล้วกด Run now — หน้านี้จะโหลดราคาใหม่ให้เองเมื่อเสร็จ (ราว 3–6 นาที, Chrome ต้องเปิดอยู่)');
   pollTimer = setInterval(async () => {
     const mins = Math.floor((Date.now() - t0) / 60000);
     try {
@@ -566,10 +576,11 @@ function startPolling() {
     } catch (e) {}
     if (Date.now() - t0 > 12 * 60000) {
       clearInterval(pollTimer); statusFromInfo();
-      document.getElementById('updText').textContent += ' · ยังไม่มีข้อมูลใหม่ (ตลาดอาจยังไม่ปิด หรือ workflow ยังไม่จบ ลองกด “โหลดข้อมูลล่าสุด” ภายหลัง)';
-    } else setStatus('wait', `รอข้อมูลใหม่… ${mins} นาที (ปกติใช้ 2–4 นาทีหลังกด Run workflow)`);
+      document.getElementById('updText').textContent += ' · ยังไม่มีราคาใหม่ (ตลาดอาจยังไม่ปิด หรืองานยังไม่จบ ลองกด “โหลดข้อมูลล่าสุด” ภายหลัง)';
+    } else setStatus('wait', `รอราคาใหม่จาก Claude… ${mins} นาที (ปกติ 3–6 นาทีหลังกด Run now)`);
   }, 20000);
 }
+document.getElementById('updBtn').addEventListener('click', startPolling);
 document.getElementById('checkBtn').addEventListener('click', () => checkRemote(true));
 
 function render() {
