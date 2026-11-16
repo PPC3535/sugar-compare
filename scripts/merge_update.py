@@ -14,8 +14,8 @@ import csv, datetime as dt, json, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JSON_PATH = os.path.join(ROOT, "data", "data.json")
 CSV_PATH = os.path.join(ROOT, "data", "sugar_daily.csv")
-FAMILIES = ["SWH", "SWK", "SWQ", "SBH", "SBK", "SBN"]
-SYM_RE = re.compile(r"^(SW[HKQ]|SB[HKN])\d\d$")
+FAMILIES = ["SWH", "SWK", "SWQ", "SWV", "SWZ", "SBH", "SBK", "SBN", "SBV"]
+SYM_RE = re.compile(r"^(SW[HKQVZ]|SB[HKNV])\d\d$")
 
 
 def scale(sym):
@@ -41,6 +41,14 @@ def encode(sym, rows):
         prev = dd
         closes.append(round(c * scale(sym)))
     return [rows[0][0], gaps, closes]
+
+
+def settled_through():
+    """Latest date whose settlement is final: today (UTC) only after 19:00 UTC,
+    when both ICE London (No.5) and ICE US (No.11) have settled."""
+    now = dt.datetime.now(dt.timezone.utc)
+    day = now.date() if now.hour >= 19 else now.date() - dt.timedelta(days=1)
+    return day.isoformat()
 
 
 def load():
@@ -72,6 +80,8 @@ def merge(data, path):
             value = float(close)
             if value <= 0:
                 sys.exit(f"non-positive price: {line}")
+            if day > settled_through():
+                continue  # today's session has not settled yet; Barchart shows a live value
             new.setdefault(sym, {})[day] = value
     if not new:
         sys.exit("no price lines found in input")
